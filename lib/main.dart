@@ -54,9 +54,6 @@ class _CameraPageState extends State<CameraPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
       body: FutureBuilder<void>(
         future: _initCameraFuture,
         builder: (context, snapshot) {
