@@ -59,10 +59,10 @@ def get_data_generators(corpus):
 
     # Data loading generators
     train_data_gen = train_image_generator.flow_from_directory(
-        batch_size=BATCH_SIZE, directory=corpus.train_dir, shuffle=True, target_size=IMG_DIMS, class_mode="binary",
+        batch_size=BATCH_SIZE, directory=corpus.train_dir, shuffle=True, target_size=IMG_DIMS, class_mode="categorical",
     )
     val_data_gen = validation_image_generator.flow_from_directory(
-        batch_size=BATCH_SIZE, directory=corpus.val_dir, target_size=IMG_DIMS, class_mode="binary"
+        batch_size=BATCH_SIZE, directory=corpus.val_dir, target_size=IMG_DIMS, class_mode="categorical"
     )
 
     return train_data_gen, val_data_gen
@@ -82,7 +82,7 @@ def construct_model():
             Dropout(0.2),
             Flatten(),
             Dense(512, activation="relu"),
-            Dense(1, activation="sigmoid"),
+            Dense(2, activation="sigmoid"),
         ]
     )
 
