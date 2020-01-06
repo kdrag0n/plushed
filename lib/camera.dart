@@ -73,39 +73,51 @@ class _CameraPageState extends State<CameraPage> {
     final deviceRatio = size.width / size.height;
 
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            // TODO: split camera view into a stateful widget
-            FutureBuilder<void>(
-              future: _initCameraFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  return Transform.scale(
-                    scale: _controller.value.aspectRatio / deviceRatio,
-                    child: AspectRatio(
-                      aspectRatio: _controller.value.aspectRatio,
-                      child: CameraPreview(_controller),
-                    ),
-                  );
-                } else {
-                  return Center(child: CircularProgressIndicator());
-                }
-              },
+      body: Stack(
+        fit: StackFit.expand,
+        children: <Widget>[
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                // TODO: split camera view into a stateful widget
+                FutureBuilder<void>(
+                  future: _initCameraFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      return Transform.scale(
+                        scale: _controller.value.aspectRatio / deviceRatio,
+                        child: AspectRatio(
+                          aspectRatio: _controller.value.aspectRatio,
+                          child: CameraPreview(_controller),
+                        ),
+                      );
+                    } else {
+                      return Center(child: CircularProgressIndicator());
+                    }
+                  },
+                ),
+              ],
             ),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.black45,
-                borderRadius: BorderRadius.all(const Radius.circular(12)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Text(_currentMessage),
+          ),
+          Positioned(
+            bottom: 32,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.black45,
+                  borderRadius: BorderRadius.all(const Radius.circular(12)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Text(_currentMessage),
+                ),
               ),
             ),
-          ],
-        )
+          ),
+        ],
       ),
     );
   }
