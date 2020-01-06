@@ -13,8 +13,8 @@ from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2
 
 # Settings
 BATCH_SIZE = 5
-EPOCHS = 20
-IMG_DIMS = (225, 225)
+EPOCHS = 18
+IMG_DIMS = (224, 224)
 
 
 CorpusCounts = collections.namedtuple("CorpusCounts", ["android", "other", "total"])
@@ -132,12 +132,20 @@ def plot_history(history):
     plt.show()
 
 
+def export_tflite(model, path):
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
+    tflite_model = converter.convert()
+    with open(path, "wb+") as f:
+        f.write(tflite_model)
+
+
 def main():
     corpus = get_corpus_info()
     train_data_gen, val_data_gen = get_data_generators(corpus)
     model = construct_model()
     history = train_model(model, corpus, train_data_gen, val_data_gen)
     plot_history(history)
+    export_tflite(model, "plushed_model.tflite")
 
 
 if __name__ == "__main__":
