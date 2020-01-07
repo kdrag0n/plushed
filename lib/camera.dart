@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:tflite/tflite.dart';
 
-class CameraPage extends StatefulWidget {
-  CameraPage({Key key, this.title}) : super(key: key);
+class CameraView extends StatefulWidget {
+  CameraView({Key key, this.stateCallback}) : super(key: key);
 
-  final String title;
+  final Function(bool) stateCallback;
 
   @override
-  _CameraPageState createState() => _CameraPageState();
+  _CameraViewState createState() => _CameraViewState();
 }
 
-class _CameraPageState extends State<CameraPage> {
+class _CameraViewState extends State<CameraView> {
   CameraController _controller;
   Future<void> _initCameraFuture;
   bool _isDetecting = false;
-  String _currentMessage = "";
+  bool _objDetected = false;
 
   Future<void> initCamera() async {
     List<CameraDescription> cameras = await availableCameras();
@@ -26,30 +26,27 @@ class _CameraPageState extends State<CameraPage> {
         labels: "assets/labels.txt",
         numThreads: 1
     );
-    await Future.delayed(const Duration(seconds: 1), () {});
 
-    _controller.startImageStream((CameraImage img) {
+    _controller.startImageStream((CameraImage img) async {
       if (!_isDetecting) {
         _isDetecting = true;
 
-        Tflite.runModelOnFrame(
+        List<dynamic> recognitions = await Tflite.runModelOnFrame(
           bytesList: img.planes.map((plane) {
             return plane.bytes;
           }).toList(),
           imageHeight: img.height,
           imageWidth: img.width,
           numResults: 1,
-        ).then((recognitions) {
-          setState(() {
-            if (recognitions[0]["label"] == "android") {
-              _currentMessage = "Android plushie detected";
-            } else {
-              _currentMessage = "Unrecognized object";
-            }
-          });
+        );
 
-          _isDetecting = false;
-        });
+        var objDetected = recognitions[0]["label"] == "android";
+        if (objDetected != _objDetected) {
+          _objDetected = objDetected;
+          widget.stateCallback(_objDetected);
+        }
+
+        _isDetecting = false;
       }
     });
   }
@@ -63,8 +60,8 @@ class _CameraPageState extends State<CameraPage> {
   @override
   void dispose() {
     _controller?.dispose();
-    super.dispose();
     Tflite.close();
+    super.dispose();
   }
 
   @override
@@ -72,6 +69,39 @@ class _CameraPageState extends State<CameraPage> {
     final size = MediaQuery.of(context).size;
     final deviceRatio = size.width / size.height;
 
+    return FutureBuilder<void>(
+      future: _initCameraFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return Transform.scale(
+            scale: _controller.value.aspectRatio / deviceRatio,
+            child: AspectRatio(
+              aspectRatio: _controller.value.aspectRatio,
+              child: CameraPreview(_controller),
+            ),
+          );
+        } else {
+          return Center(child: CircularProgressIndicator());
+        }
+      },
+    );
+  }
+}
+
+class CameraPage extends StatefulWidget {
+  CameraPage({Key key, this.title}) : super(key: key);
+
+  final String title;
+
+  @override
+  _CameraPageState createState() => _CameraPageState();
+}
+
+class _CameraPageState extends State<CameraPage> {
+  String _currentMessage = "Initializing detection...";
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -80,23 +110,15 @@ class _CameraPageState extends State<CameraPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                // TODO: split camera view into a stateful widget
-                FutureBuilder<void>(
-                  future: _initCameraFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      return Transform.scale(
-                        scale: _controller.value.aspectRatio / deviceRatio,
-                        child: AspectRatio(
-                          aspectRatio: _controller.value.aspectRatio,
-                          child: CameraPreview(_controller),
-                        ),
-                      );
+                CameraView(stateCallback: (bool objDetected) {
+                  setState(() {
+                    if (objDetected) {
+                      _currentMessage = "Android plushie detected";
                     } else {
-                      return Center(child: CircularProgressIndicator());
+                      _currentMessage = "Unrecognized object";
                     }
-                  },
-                ),
+                  });
+                }),
               ],
             ),
           ),
