@@ -111,8 +111,16 @@ class CameraPage extends StatefulWidget {
 }
 
 class _CameraPageState extends State<CameraPage> {
-  bool _currentState = false;
+  bool _currentState;
   String _currentMessage = "Initializing detection...";
+
+  ReticleState getReticleState() {
+    if (_currentState == null) {
+      return ReticleState.ERROR;
+    } else {
+      return _currentState ? ReticleState.CLOSER : ReticleState.SENSING;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -144,8 +152,8 @@ class _CameraPageState extends State<CameraPage> {
               left: 0,
               right: 0,
               child: Center(
-                child: Reticle(_currentState ? ReticleState.CLOSER : ReticleState.SENSING),
-              )
+                child: Reticle(getReticleState()),
+              ),
           ),
           Positioned(
             bottom: 32,
