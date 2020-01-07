@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:tflite/tflite.dart';
@@ -16,6 +17,7 @@ class _CameraViewState extends State<CameraView> {
   Future<void> _initCameraFuture;
   bool _isDetecting = false;
   bool _objDetected;
+  int _lastTime = 0;
 
   Future<void> initCamera() async {
     List<CameraDescription> cameras = await availableCameras();
@@ -32,6 +34,12 @@ class _CameraViewState extends State<CameraView> {
 
   void processImage(CameraImage img) async {
     if (!_isDetecting) {
+      // Rate-limit recognition to every 50 ms to reduce lag and battery drain
+      int now = DateTime.now().millisecondsSinceEpoch;
+      if (now - _lastTime < 50) {
+        return;
+      }
+
       _isDetecting = true;
 
       List<dynamic> recognitions = await Tflite.runModelOnFrame(
@@ -49,6 +57,8 @@ class _CameraViewState extends State<CameraView> {
         widget.stateCallback(_objDetected);
       }
 
+      // Query time again since detection itself takes longer than 50 ms
+      _lastTime = DateTime.now().millisecondsSinceEpoch;
       _isDetecting = false;
     }
   }
