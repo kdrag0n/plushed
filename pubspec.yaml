@@ -26,6 +26,7 @@ dependencies:
 
   camera: ^0.5.7
   tflite: ^1.0.4
+  flutter_reticle: ^0.1.2
 
 dev_dependencies:
   flutter_test:
