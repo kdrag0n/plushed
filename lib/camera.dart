@@ -15,7 +15,7 @@ class _CameraViewState extends State<CameraView> {
   CameraController _controller;
   Future<void> _initCameraFuture;
   bool _isDetecting = false;
-  bool _objDetected = false;
+  bool _objDetected;
 
   Future<void> initCamera() async {
     List<CameraDescription> cameras = await availableCameras();
@@ -27,28 +27,30 @@ class _CameraViewState extends State<CameraView> {
         numThreads: 1
     );
 
-    _controller.startImageStream((CameraImage img) async {
-      if (!_isDetecting) {
-        _isDetecting = true;
+    _controller.startImageStream(processImage);
+  }
 
-        List<dynamic> recognitions = await Tflite.runModelOnFrame(
-          bytesList: img.planes.map((plane) {
-            return plane.bytes;
-          }).toList(),
-          imageHeight: img.height,
-          imageWidth: img.width,
-          numResults: 1,
-        );
+  void processImage(CameraImage img) async {
+    if (!_isDetecting) {
+      _isDetecting = true;
 
-        var objDetected = recognitions[0]["label"] == "android";
-        if (objDetected != _objDetected) {
-          _objDetected = objDetected;
-          widget.stateCallback(_objDetected);
-        }
+      List<dynamic> recognitions = await Tflite.runModelOnFrame(
+        bytesList: img.planes.map((plane) {
+          return plane.bytes;
+        }).toList(),
+        imageHeight: img.height,
+        imageWidth: img.width,
+        numResults: 1,
+      );
 
-        _isDetecting = false;
+      var objDetected = recognitions[0]["label"] == "android";
+      if (objDetected != _objDetected) {
+        _objDetected = objDetected;
+        widget.stateCallback(_objDetected);
       }
-    });
+
+      _isDetecting = false;
+    }
   }
 
   @override
