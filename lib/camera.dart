@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:tflite/tflite.dart';
+import 'package:flutter_reticle/flutter_reticle.dart';
 
 class CameraView extends StatefulWidget {
   CameraView({Key key, this.stateCallback}) : super(key: key);
@@ -110,6 +111,7 @@ class CameraPage extends StatefulWidget {
 }
 
 class _CameraPageState extends State<CameraPage> {
+  bool _currentState = false;
   String _currentMessage = "Initializing detection...";
 
   @override
@@ -124,6 +126,8 @@ class _CameraPageState extends State<CameraPage> {
               children: <Widget>[
                 CameraView(stateCallback: (bool objDetected) {
                   setState(() {
+                    _currentState = objDetected;
+
                     if (objDetected) {
                       _currentMessage = "Android plushie detected";
                     } else {
@@ -133,6 +137,15 @@ class _CameraPageState extends State<CameraPage> {
                 }),
               ],
             ),
+          ),
+          if (!_currentState) Positioned(
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Reticle(ReticleState.SENSING),
+              )
           ),
           Positioned(
             bottom: 32,
