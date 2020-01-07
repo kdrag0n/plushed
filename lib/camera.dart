@@ -138,13 +138,13 @@ class _CameraPageState extends State<CameraPage> {
               ],
             ),
           ),
-          if (!_currentState) Positioned(
+          Positioned(
               top: 0,
               bottom: 0,
               left: 0,
               right: 0,
               child: Center(
-                child: Reticle(ReticleState.SENSING),
+                child: Reticle(_currentState ? ReticleState.CLOSER : ReticleState.SENSING),
               )
           ),
           Positioned(
