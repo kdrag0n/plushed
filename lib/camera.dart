@@ -42,6 +42,7 @@ class _CameraViewState extends State<CameraView> {
       }
 
       _isDetecting = true;
+      _controller.stopImageStream();
 
       List<dynamic> recognitions = await Tflite.runModelOnFrame(
         bytesList: img.planes.map((plane) {
@@ -61,6 +62,7 @@ class _CameraViewState extends State<CameraView> {
       // Query time again since detection itself takes longer than 50 ms
       _lastTime = DateTime.now().millisecondsSinceEpoch;
       _isDetecting = false;
+      _controller.startImageStream(processImage);
     }
   }
 
